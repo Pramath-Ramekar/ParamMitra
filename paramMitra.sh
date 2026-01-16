@@ -24,18 +24,15 @@ mkdir -p "$OUTPUT_DIR" "$LOG_DIR"
 
 > "$FINAL_OUTPUT"
 
-
 # =========================
 # Dependency Check
 # =========================
 REQUIRED_TOOLS=(
   paramspider
-  paraminer
   waybackurls
   arjun
   linkfinder
   JSParser
-  x8
   qsreplace
   parallel
 )
@@ -43,7 +40,7 @@ REQUIRED_TOOLS=(
 for tool in "${REQUIRED_TOOLS[@]}"; do
   if ! command -v "$tool" &>/dev/null; then
     echo "[!] Missing dependency: $tool"
-    echo "[!] Please run ./install.sh"
+    echo "[!] Please install it before running."
     exit 1
   fi
 done
@@ -52,7 +49,7 @@ done
 # Helper
 # =========================
 dedupe() {
-  sort -u | grep "?" 
+  sort -u | grep "?"
 }
 
 export -f dedupe
@@ -62,20 +59,12 @@ export -f dedupe
 # =========================
 echo "[+] Running ParamSpider"
 cat "$INPUT_FILE" | parallel -j $THREADS '
-  domain=$(echo {} | sed "s~https://~~")
+  domain=$(echo {} | sed "s~https\?://~~")
   paramspider -d "$domain" --silent 2>>logs/paramspider.log
 ' | dedupe >> "$FINAL_OUTPUT"
 
 # =========================
-# 2. Paraminer
-# =========================
-echo "[+] Running Paraminer"
-cat "$INPUT_FILE" | parallel -j $THREADS '
-  paraminer -u {} -silent 2>>logs/paraminer.log
-' | dedupe >> "$FINAL_OUTPUT"
-
-# =========================
-# 3. Waybackurls
+# 2. Waybackurls
 # =========================
 echo "[+] Running Waybackurls"
 cat "$INPUT_FILE" | waybackurls 2>>logs/wayback.log \
@@ -83,7 +72,7 @@ cat "$INPUT_FILE" | waybackurls 2>>logs/wayback.log \
 | dedupe >> "$FINAL_OUTPUT"
 
 # =========================
-# 4. Arjun
+# 3. Arjun
 # =========================
 echo "[+] Running Arjun"
 cat "$INPUT_FILE" | parallel -j $THREADS '
@@ -91,7 +80,7 @@ cat "$INPUT_FILE" | parallel -j $THREADS '
 ' | dedupe >> "$FINAL_OUTPUT"
 
 # =========================
-# 5. Extract JS URLs
+# 4. Extract JS URLs
 # =========================
 echo "[+] Extracting JS URLs"
 cat "$INPUT_FILE" | waybackurls \
@@ -99,7 +88,7 @@ cat "$INPUT_FILE" | waybackurls \
 | sort -u > "$OUTPUT_DIR/js_files.txt"
 
 # =========================
-# 6. LinkFinder
+# 5. LinkFinder
 # =========================
 echo "[+] Running LinkFinder"
 cat "$OUTPUT_DIR/js_files.txt" | parallel -j $THREADS '
@@ -107,7 +96,7 @@ cat "$OUTPUT_DIR/js_files.txt" | parallel -j $THREADS '
 ' | dedupe >> "$FINAL_OUTPUT"
 
 # =========================
-# 7. JSParser
+# 6. JSParser
 # =========================
 echo "[+] Running JSParser"
 cat "$OUTPUT_DIR/js_files.txt" | parallel -j $THREADS '
@@ -115,15 +104,7 @@ cat "$OUTPUT_DIR/js_files.txt" | parallel -j $THREADS '
 ' | dedupe >> "$FINAL_OUTPUT"
 
 # =========================
-# 8. X8
-# =========================
-echo "[+] Running X8"
-cat "$FINAL_OUTPUT" | parallel -j $THREADS '
-  x8 -u {} 2>>logs/x8.log
-' | dedupe >> "$FINAL_OUTPUT"
-
-# =========================
-# 9. Normalize with qsreplace
+# 7. Normalize with qsreplace
 # =========================
 echo "[+] Normalizing parameters"
 cat "$FINAL_OUTPUT" \
