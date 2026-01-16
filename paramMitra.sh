@@ -31,7 +31,6 @@ REQUIRED_TOOLS=(
   paramspider
   waybackurls
   arjun
-  linkfinder
   JSParser
   qsreplace
   parallel
@@ -88,15 +87,7 @@ cat "$INPUT_FILE" | waybackurls \
 | sort -u > "$OUTPUT_DIR/js_files.txt"
 
 # =========================
-# 5. LinkFinder
-# =========================
-echo "[+] Running LinkFinder"
-cat "$OUTPUT_DIR/js_files.txt" | parallel -j $THREADS '
-  linkfinder -i {} -o cli 2>>logs/linkfinder.log
-' | dedupe >> "$FINAL_OUTPUT"
-
-# =========================
-# 6. JSParser
+# 5. JSParser
 # =========================
 echo "[+] Running JSParser"
 cat "$OUTPUT_DIR/js_files.txt" | parallel -j $THREADS '
@@ -104,7 +95,7 @@ cat "$OUTPUT_DIR/js_files.txt" | parallel -j $THREADS '
 ' | dedupe >> "$FINAL_OUTPUT"
 
 # =========================
-# 7. Normalize with qsreplace
+# 6. Normalize with qsreplace
 # =========================
 echo "[+] Normalizing parameters"
 cat "$FINAL_OUTPUT" \
