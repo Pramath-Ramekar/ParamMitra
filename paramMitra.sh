@@ -21,7 +21,6 @@ if [[ -z "$INPUT_FILE" || ! -f "$INPUT_FILE" ]]; then
 fi
 
 mkdir -p "$OUTPUT_DIR" "$LOG_DIR"
-
 > "$FINAL_OUTPUT"
 
 # =========================
@@ -31,7 +30,6 @@ REQUIRED_TOOLS=(
   paramspider
   waybackurls
   arjun
-  JSParser
   qsreplace
   parallel
 )
@@ -79,23 +77,7 @@ cat "$INPUT_FILE" | parallel -j $THREADS '
 ' | dedupe >> "$FINAL_OUTPUT"
 
 # =========================
-# 4. Extract JS URLs
-# =========================
-echo "[+] Extracting JS URLs"
-cat "$INPUT_FILE" | waybackurls \
-| grep "\.js$" \
-| sort -u > "$OUTPUT_DIR/js_files.txt"
-
-# =========================
-# 5. JSParser
-# =========================
-echo "[+] Running JSParser"
-cat "$OUTPUT_DIR/js_files.txt" | parallel -j $THREADS '
-  JSParser {} 2>>logs/jsparser.log
-' | dedupe >> "$FINAL_OUTPUT"
-
-# =========================
-# 6. Normalize with qsreplace
+# 4. Normalize with qsreplace
 # =========================
 echo "[+] Normalizing parameters"
 cat "$FINAL_OUTPUT" \
